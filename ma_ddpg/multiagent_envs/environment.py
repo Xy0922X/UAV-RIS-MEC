@@ -2,7 +2,7 @@ import gym
 from gym import spaces
 import numpy as np
 from multiagent.multi_discrete import MultiDiscrete
-from ue_uav_bs.agents import UE, UAV
+from agents import UE, UAV
 
 # environment for all agents in the multiagent world
 # currently code assumes that no agents will be created/destroyed at runtime!

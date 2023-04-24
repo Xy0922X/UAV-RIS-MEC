@@ -1,13 +1,13 @@
-from ue_uav_bs.agents import Agent, UE, BS, UAV, Building
-from ue_uav_bs.MADDPG.multiagent_envs.env_functions import *
+from agents import Agent, UE, BS, UAV, Building
+from ma_ddpg.multiagent_envs.env_functions import *
 import numpy as np
 
 class World(object):
-    ue1 = UE.UE(8, 55, 2)
-    ue2 = UE.UE(50, 25, 2)
-    ue3 = UE.UE(15, 65, 2)
-    ue4 = UE.UE(20, 45, 2)
-    ue5 = UE.UE(65, 85, 2)
+    ue1 = UE.UE(8, 55, 0.5)
+    ue2 = UE.UE(50, 25, 0.5)
+    ue3 = UE.UE(15, 65, 0.5)
+    ue4 = UE.UE(20, 45, 0.5)
+    ue5 = UE.UE(65, 85, 0.5)
     uav1 = UAV.UAV(1, 1, 1, 1500000)  # 根据参考论文，无人机初始能量为 500kJ，此处定为 1500kJ 是为了让仿真时无人机可以飞得久一点，到 90 多秒再降落
     uav2 = UAV.UAV(90, 100, 1, 1500000)
     uav3 = UAV.UAV(90, 10, 1, 1500000)
@@ -16,8 +16,6 @@ class World(object):
     bs3 = BS.BS(110, 5, 50)
     bs4 = BS.BS(35, 5, 50)
     bs5 = BS.BS(60, 70, 50)
-    # building1 = Building.Building(10, 20, 0, 10, 10, 40)
-    # building2 = Building.Building(20, 20, 0, 10, 10, 20)
     building1 = Building.Building(10, 20, 0, 10, 10, 65)
     building2 = Building.Building(20, 20, 0, 10, 10, 50)
     building3 = Building.Building(55, 40, 0, 10, 10, 60)

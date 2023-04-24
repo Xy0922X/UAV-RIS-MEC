@@ -1,10 +1,10 @@
 import numpy as np
 import tensorflow as tf
-import ue_uav_bs.MADDPG.maddpg.common.tf_util as U
+import ma_ddpg.maddpg.common.tf_util as U
 
-from ue_uav_bs.MADDPG.maddpg.common.distributions import make_pdtype
-from ue_uav_bs.MADDPG.maddpg import AgentTrainer
-from ue_uav_bs.MADDPG.maddpg.trainer.replay_buffer import ReplayBuffer
+from ma_ddpg.maddpg.common.distributions import make_pdtype
+from ma_ddpg.maddpg import AgentTrainer
+from ma_ddpg.maddpg.trainer.replay_buffer import ReplayBuffer
 
 
 def discount_with_dones(rewards, dones, gamma):

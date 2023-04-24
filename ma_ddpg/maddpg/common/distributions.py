@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-import ue_uav_bs.MADDPG.maddpg.common.tf_util as U
+import ma_ddpg.maddpg.common.tf_util as U
 from tensorflow.python.ops import math_ops
 from multiagent.multi_discrete import MultiDiscrete
 from tensorflow.python.ops import nn
