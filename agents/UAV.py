@@ -7,9 +7,10 @@ from agents.Agent import Agent
 
 class UAV(Agent):
     # 能量 500kJ，参考论文为 Mobile Edge Computing via a UAV-Mounted Cloudlet: Optimization of Bit Allocation and Path Planning
-    energy = 500000
+    energy = 1500000
     # cpu算力
-    cpu_power = 10 ** 2
+    cpu_power = 1 * 10 ** 9
+
 
     def __init__(self, x, y, z, energy):
         super().__init__(x, y, z)

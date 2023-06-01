@@ -9,7 +9,7 @@ print(content)
 
 bx = plt.subplot(1, 1, 1)  # 设置2D绘图空间
 # 设置x轴坐标
-xx = range(1, 500, 10)
+xx = range(1, 6000, 10)
 # 设置y轴坐标
 yy = content
 bx.plot(xx, yy)  # 绘制对应连线的二维线性图

@@ -13,7 +13,7 @@ class Agent:
     # 5G带宽，假设为 350 MHz
     bandwidth = 3.5 * 10 ** 8
     # 信号功率
-    S = 10000
+    S = 150000
 
     def __init__(self, x, y, z):
         self.x = x
@@ -24,3 +24,5 @@ class Agent:
     # 输出类变量
     def say(self):
         print(self.x, self.y, self.z)
+
+

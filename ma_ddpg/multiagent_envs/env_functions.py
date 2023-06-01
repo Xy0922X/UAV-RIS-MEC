@@ -1,19 +1,31 @@
 import math
 import numpy as np
+import math as mt
 
+M = 100
+phase_shift = 100
+B = 8000  # 8MHz
+Xi = mt.pow(10, (3 / 10))
+white_noise = 10
+Power_ue = 3 * mt.pow(10, 3)  # 300mW
+Power_uav = 5 * mt.pow(10, 3)  # 500mW
+N_0 = mt.pow(10, (-169 / 10)) * (0.1 * mt.pow(10, 3)) / B
+omega1 = 0.05
+omega2 = 1
+chi = 1e-26
 
 # 起飞
 def launching(self):
     uav_index = -1
     for uav in self.uav_cluster:
         uav_index += 1
-        for _ in np.arange(1, 31, 1):
+        # 让无人机高度抬高90m
+        for _ in np.arange(1, 21, 1):
             theta = 0  # 单位时间内的飞行仰角（ 0 表示垂直起飞）
             fai = 0  # 单位时间内飞行轨迹与x轴正方向的水平夹角，垂直起降时 fai 取值随意
             velocity = 3  # 飞行速度，m/s
             uav.energy = uav.energy - get_power_cost_per_meter(abs(velocity)) * abs(velocity) * 1
             uav.flight_trace(theta, fai, velocity, 1)  # 直线飞行
-
             self.uav_cluster_x[uav_index].append(uav.x)
             self.uav_cluster_y[uav_index].append(uav.y)
             self.uav_cluster_z[uav_index].append(uav.z)
@@ -188,7 +200,7 @@ def get_ue_to_uav_path_loss(ue_cluster, uav_cluster, building_cluster):
         for cols in rows:
             cols_index += 1
             if cols == 0:
-                path_loss[rows_index][cols_index] = path_loss[rows_index][cols_index] + 20
+                path_loss[rows_index][cols_index] = path_loss[rows_index][cols_index] + 5
             elif cols == 1:
                 path_loss[rows_index][cols_index] = path_loss[rows_index][cols_index] + 1
     return path_loss
@@ -495,6 +507,7 @@ def get_bs_local_strategy(bs_cluster):
 
 
 # 根据强化学习输出的动作 action 值确定卸载策略；同时进行了各智能体 data_size、cpu_task 的卸载变化，以及卸载传输时延 Ttr 的计算
+
 # 当前该方法针对 nue、nuav、nbs 的场景
 def get_strategy_and_Ttr_by_action_for_maddpg(ue_cluster, uav_cluster, bs_cluster, building_cluster, action):
     ue_uav_cluster_offload_strategy = np.zeros((len(ue_cluster), len(uav_cluster)))
@@ -568,55 +581,147 @@ def get_strategy_and_Ttr_by_action_for_maddpg(ue_cluster, uav_cluster, bs_cluste
            ue_local_strategy, uav_local_strategy, bs_local_strategy
 
 
-# 集群优化目标值的微分；数据回传的时延暂时不考虑
+# 集群优化目标值的微分；数据 回传的时延暂时不考虑
 def get_cluster_target_slice_for_maddpg(ue_cluster, uav_cluster, bs_cluster, building_cluster, action):
+
     ue_uav_and_ue_bs_cluster_offload_strategy, Ttr_ue_uav_and_ue_bs_cluster, \
     uav_bs_cluster_offload_strategy, Ttr_uav_bs_cluster, \
     ue_local_strategy, uav_local_strategy, bs_local_strategy = \
         get_strategy_and_Ttr_by_action_for_maddpg(ue_cluster, uav_cluster, bs_cluster, building_cluster, action)
-    # ue_uav_and_ue_bs_cluster_offload_strategy, Ttr_ue_uav_and_ue_bs_cluster = get_ue_uav_and_ue_bs_cluster_offload_strategy_and_Ttr(ue_cluster, uav_cluster, bs_cluster, building_cluster)
-    # uav_bs_cluster_offload_strategy, Ttr_uav_bs_cluster = get_uav_bs_cluster_offload_strategy_and_Ttr(uav_cluster, bs_cluster)
-    # ue_local_strategy = get_ue_or_uav_local_strategy(ue_uav_and_ue_bs_cluster_offload_strategy)
-    # uav_local_strategy = get_ue_or_uav_local_strategy(uav_bs_cluster_offload_strategy)
-    # bs_local_strategy = get_bs_local_strategy(bs_cluster)
-    # 各 communicate_rate 的计算方法在制定卸载策略时进行调用、使用，此处不再需要调用
-    # ue_uav_clusters_communicate_rate = get_clusters_communicate_rate(ue_cluster, uav_cluster)
-    # ue_bs_clusters_communicate_rate = get_clusters_communicate_rate(ue_cluster, bs_cluster)
-    # uav_bs_clusters_communicate_rate = get_clusters_communicate_rate(uav_cluster, bs_cluster)
-    # ue_uav_clusters_communicate_rate = get_ue_uav_communicate_rate(ue_cluster, uav_cluster, building_cluster)
-    # ue_bs_clusters_communicate_rate = get_ue_bs_communicate_rate(ue_cluster, bs_cluster)
-    # uav_bs_clusters_communicate_rate = get_uav_bs_communicate_rate(uav_cluster, bs_cluster)
+
     Tc_ue_cluster = get_Tc_agent_cluster(ue_cluster)
     Tc_uav_cluster = get_Tc_agent_cluster(uav_cluster)
     Tc_bs_cluster = get_Tc_agent_cluster(bs_cluster)
-
-    # print(ue_uav_and_ue_bs_cluster_offload_strategy)
-    # print(uav_bs_cluster_offload_strategy)
-    # print(ue_local_strategy)
-    # print(uav_local_strategy)
-    # print(bs_local_strategy)
-    # print(ue_uav_clusters_communicate_rate)
-    # print(ue_bs_clusters_communicate_rate)
-    # print(uav_bs_clusters_communicate_rate)
-    # print(Ttr_ue_uav_and_ue_bs_cluster)
-    # print(Ttr_uav_bs_cluster)
-    # print(Tc_ue_cluster)
-    # print(Tc_uav_cluster)
-    # print(Tc_bs_cluster)
-    # print(get_ue_to_uav_path_loss(ue_cluster, uav_cluster, building_cluster))
-    # # get_ue_to_bs_path_loss() 方法暂时不使用；print(get_ue_to_bs_path_loss2() 方法中包含一高斯分布随机数，若在此处打印观察则与实际使用的数值不符，因此需直接在使用处打印观察
-    # # print(get_ue_to_bs_path_loss(ue_cluster, bs_cluster))
-    # # print(get_ue_to_bs_path_loss2(ue_cluster, bs_cluster))
-    # print(get_uav_to_bs_path_loss(uav_cluster, bs_cluster))
-    # print(line_of_sight_judgement(ue_cluster, uav_cluster, building_cluster))
-    # print(np.dot(ue_uav_and_ue_bs_cluster_offload_strategy, np.transpose(Ttr_ue_uav_and_ue_bs_cluster)))
-    # print(np.dot(uav_bs_cluster_offload_strategy, np.transpose(Ttr_uav_bs_cluster)))
-    # print(np.dot(ue_local_strategy, np.transpose(Tc_ue_cluster)))
-    # print(np.dot(uav_local_strategy, np.transpose(Tc_uav_cluster)))
-    # print(np.dot(bs_local_strategy, np.transpose(Tc_bs_cluster)))
 
     return np.trace(np.dot(ue_uav_and_ue_bs_cluster_offload_strategy, np.transpose(Ttr_ue_uav_and_ue_bs_cluster))) + \
            np.trace(np.dot(uav_bs_cluster_offload_strategy, np.transpose(Ttr_uav_bs_cluster))) + \
            np.dot(ue_local_strategy, np.transpose(Tc_ue_cluster)) + \
            np.dot(uav_local_strategy, np.transpose(Tc_uav_cluster)) + \
            np.dot(bs_local_strategy, np.transpose(Tc_bs_cluster))
+
+
+def get_strategy_by_action_for_maddpg(ue_cluster, uav_cluster, bs_cluster, building_cluster, irs_cluster, action, ue_index):
+    #  action 为 0.25 或者 0.75
+    # 基站处理的任务量
+    bs_cluster_task = np.zeros((len(uav_cluster), len(bs_cluster)))
+    # 无人机与基站的卸载策略
+    uav_bs_cluster_offload_strategy = np.zeros((len(uav_cluster), len(bs_cluster)))
+    # 无人机总能耗
+    E_uav = 0
+    ue_uav_cluster_offload_strategy = np.zeros((len(uav_cluster)))
+    #  ue_uav端的总时延
+    T_ue_de = 0
+    T_ue_uav_cluster = np.zeros(len(uav_cluster))
+    ue_uav_clusters_communicate_rate = get_gu_uav_communicate_rate(ue_cluster, uav_cluster, building_cluster,
+                                                                   irs_cluster)
+    division_num_of_one_ue = (1 + len(uav_cluster))  # 维度为 无人机个数 + 用户
+    division = 1 / division_num_of_one_ue            # 0.5
+    # 每个用户根据action判断卸载策略
+    if action <= 0 + division * 1:
+        ue_local_strategy = 1  # UE本地处理置1
+        T_ue_uav_cluster += 1e9 / ue_cluster[ue_index].cpu_power
+    elif action <= 0 + division * (1 + len(uav_cluster)):
+        # 没考虑选择哪个无人机，场景目前只有一个无人机
+        for j in range(0, len(uav_cluster)):
+            #  UAV_j与UE的连接置1
+            ue_uav_cluster_offload_strategy[j] += 1
+            # 计算UE-UAV的传输时延
+            T_ue_uav_cluster[j] += 1e6 / ue_uav_clusters_communicate_rate[ue_index][j]
+            # UAV的任务计算量 += UE的任务计算量
+            uav_cluster[j].cpu_task += 1e9
+            # UAV的任务量 += UE的任务量
+            uav_cluster[j].data_size += 1e6
+            # UE的任务量和计算量置0
+            ue_cluster[ue_index].cpu_task -= 1e9
+            ue_cluster[ue_index].data_size -= 1e6
+            uav_bs_cluster_offload_strategy, T_uav_bs_cluster, bs_cluster_task_, E_uav_ = get_uav_bs_cluster_offload_strategy_and_T(
+                uav_cluster, bs_cluster, uav_cluster[j].cpu_task, uav_cluster[j].data_size)
+            uav_cluster[j].cpu_task -= uav_cluster[j].cpu_task
+            uav_cluster[j].data_size -= uav_cluster[j].data_size
+            T_ue_uav_cluster[j] += T_uav_bs_cluster
+            bs_cluster_task += bs_cluster_task_
+            E_uav += E_uav_
+    # 时延，基站处理的任务量
+    return uav_bs_cluster_offload_strategy, T_ue_uav_cluster, bs_cluster_task, E_uav
+
+def get_uav_bs_cluster_offload_strategy_and_T(uav_cluster, bs_cluster, cpu_task, data_size):
+    # 基站处理的任务量
+    bs_cluster_task_ = np.zeros((len(uav_cluster), len(bs_cluster)))
+    # 无人机与基站的卸载策略
+    uav_bs_cluster_offload_strategy = np.zeros((len(uav_cluster), len(bs_cluster)))
+    # 无人机总能耗
+    E_uav_ = 0
+    # 总时延
+    T_uav_bs_cluster = np.zeros((len(uav_cluster), len(bs_cluster)))
+    # 无人机本地处理的时延
+    T_uav_de = 0
+    # 无人机本地处理的能耗
+    E_uav_de = 0
+    # 无人机传输能耗
+    E_uav_tr = 0
+    # 无人机传输时延 + 基站处理时延
+    T_uav_tr_bs_cluster = np.zeros((len(uav_cluster), len(bs_cluster)))
+    # 无人机与基站之间的传输速率
+    uav_bs_clusters_communicate_rate = get_uav_bs_communicate_rate(uav_cluster, bs_cluster)
+    rows_index = -1
+    # 对于每个无人机
+    for rows in uav_cluster:
+        rows_index += 1
+        # 传输时延
+        T_uav_tr_bs_cluster += data_size / np.array(uav_bs_clusters_communicate_rate)
+        # 计算量加到基站上
+        for i in range(len(bs_cluster)):
+            bs_cluster[i].cpu_task += cpu_task
+        # 计算时延
+        T_uav_tr_bs_cluster += np.array(get_Tc_agent_cluster(bs_cluster))
+        T_uav_de += cpu_task / uav_cluster[rows_index].cpu_power
+        # 计算能耗
+        E_uav_de += chi * (cpu_task) ** 2 * uav_cluster[rows_index].cpu_power * 10
+        # 传输能耗
+        E_uav_tr += Power_uav * data_size / (np.array(uav_bs_clusters_communicate_rate))
+        if T_uav_de < np.min(T_uav_tr_bs_cluster):
+            T_uav_bs_cluster = T_uav_de
+            E_uav_ += E_uav_de
+        else:
+            T_uav_bs_cluster = np.min(T_uav_tr_bs_cluster)
+            min_delay_bs_index = np.argmin(T_uav_tr_bs_cluster, axis=None)
+            min_list = np.unravel_index(min_delay_bs_index, T_uav_tr_bs_cluster.shape, order='C')
+            # 最小值的位置为
+            min_location = min_list[1]
+            uav_bs_cluster_offload_strategy[0][min_location] = 1.0
+            bs_cluster_task_[0][min_location] += cpu_task
+            E_uav_ += E_uav_tr[0][min_location]
+    return uav_bs_cluster_offload_strategy, T_uav_bs_cluster, bs_cluster_task_, E_uav_
+
+def get_gu_uav_communicate_rate(ue_cluster, uav_cluster, building_cluster, irs_cluster):
+    ue_uav_communicate_rate = np.zeros((len(ue_cluster), len(uav_cluster)))
+    los_judgement = line_of_sight_judgement(ue_cluster, uav_cluster, building_cluster)
+    rows_index = -1
+    ue_uav_distance = get_clusters_distance(ue_cluster, uav_cluster)
+    ue_irs_distance = get_clusters_distance(ue_cluster, irs_cluster)
+    irs_uav_distance = get_clusters_distance(irs_cluster, uav_cluster)
+    gu_uav_communication = np.zeros((len(ue_cluster), len(uav_cluster)))
+
+    for rows in los_judgement:
+        cols_index = -1
+        rows_index += 1
+        for cols in rows:
+            cols_index += 1
+            if cols == 0:  # 使用智能反射面
+                phase_shift = 0
+                for m in range(M):
+                    angle_dif = np.abs(
+                        0.5 * m * (irs_cluster[0].x - ue_cluster[rows_index].x) / ue_irs_distance[rows_index][
+                            cols_index] - (irs_cluster[0].x - uav_cluster[cols_index].x) / irs_uav_distance[0][0] * (
+                                2 * np.pi))
+                    phase_shift = phase_shift + mt.sin((angle_dif / 180) * mt.pi)
+                gu_uav_communication[rows_index][cols_index] = Power_ue * math.pow(
+                    phase_shift * Xi / (B * N_0 * irs_uav_distance * ue_irs_distance[rows_index][cols_index]),
+                    2)
+            elif cols == 1:
+                gu_uav_communication[rows_index][cols_index] = Power_ue * math.pow(
+                    Xi / (B * N_0 * ue_uav_distance[rows_index][cols_index]),
+                    2)
+            ue_uav_communicate_rate[rows_index][cols_index] = B * np.log2(
+                1 + gu_uav_communication[rows_index][cols_index])
+    return ue_uav_communicate_rate

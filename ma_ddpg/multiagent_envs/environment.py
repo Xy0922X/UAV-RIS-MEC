@@ -14,7 +14,7 @@ class MultiAgentEnv(gym.Env):
         # modified 2
         self.agents = []
         self.agents.append(self.world.uav_cluster)
-        self.agents.append(self.world.ue_cluster)
+        self.agents.append(self.world.ue_cluster)        # 讓用戶取消
         # set required vectorized gym env property
         # modified 2
         self.n = self.world.uav_num + self.world.ue_num
@@ -38,7 +38,7 @@ class MultiAgentEnv(gym.Env):
             for agent in self.agents[agent_index]:
                 total_action_space = []
                 if isinstance(agent, UAV.UAV):
-                    self.discrete_action_space = False
+                    self.discrete_action_space = True
                 elif isinstance(agent, UE.UE):
                     self.discrete_action_space = True
                 # physical action space
@@ -47,8 +47,8 @@ class MultiAgentEnv(gym.Env):
                     if isinstance(agent, UAV.UAV):
                         u_action_space = spaces.Discrete(world.action_dim_for_uav)
                     elif isinstance(agent, UE.UE):
-                        division_num_of_one_ue = (1 + len(world.uav_cluster) + len(world.bs_cluster) + len(world.uav_cluster) * len(
-                            world.bs_cluster))
+                        # 修改：我这里用户只有卸载或无人机处理
+                        division_num_of_one_ue = (1 + len(world.uav_cluster))
                         u_action_space = spaces.Discrete(division_num_of_one_ue)
                     else:
                         u_action_space = 1
@@ -71,24 +71,18 @@ class MultiAgentEnv(gym.Env):
 
     def step(self, action_n):
         obs_n = []
-        # modified 2
         self.agents = []
         self.agents.append(self.world.uav_cluster)
         self.agents.append(self.world.ue_cluster)
-        # set action for each agent
-        # for i, agent in enumerate(self.agents):
-        #     self._set_action(action_n[i], self.action_space[i])
+        # 遍历action_n的动作,将其分别应用于对应的智能体
         for i in range(0, len(action_n)):
             self._set_action(action_n[i], self.action_space[i])
-        # advance world state
+        # 获取每个智能体的奖励、是否终止、时延和环境状态。
         reward_n, is_terminal_n, delay_n, situation_n = self.world.step(self.agents, action_n)
-        # record observation for each agent
-        # modified 2
+        # 遍历 self.agents 中的每个智能体,并将其观测值添加到 obs_n 中。
         for agent_index in range(0, 2):
-        # for agent_index in range(0, 1):
             for agent in self.agents[agent_index]:
                 obs_n.append(self._get_obs(agent))
-
         return obs_n, reward_n, is_terminal_n, delay_n, situation_n
 
     def reset(self):

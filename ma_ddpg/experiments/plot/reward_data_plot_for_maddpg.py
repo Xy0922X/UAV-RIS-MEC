@@ -2,7 +2,7 @@ import xlrd2
 import matplotlib.pyplot as plt
 from scipy import signal
 
-book = xlrd2.open_workbook("reward_data-20230319183101.xls")
+book = xlrd2.open_workbook("reward_data-20230531174715.xls")
 sheet = book.sheet_by_index(0)
 
 i = 1
